@@ -3,18 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
+
+    private UIManager UIScript;
+
     public Brick BrickPrefab;
     public int LineCount = 6;
-    public Rigidbody Ball;
+    //public Rigidbody Ball;
+    [SerializeField] private Rigidbody ball;
 
-    public Text ScoreText;
-    public GameObject GameOverText;
+    //public Text ScoreText;
+    [SerializeField] private Text scoreText;
+
+    public GameObject gameOverText;
+
+    public Text nameText;
     
     private bool m_Started = false;
     private int m_Points;
+
+    private int highScore = 0;
     
     private bool m_GameOver = false;
 
@@ -22,6 +33,12 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        UIScript = GameObject.Find("UIManager").GetComponent<UIManager>();
+
+        nameText.text = ($"Score: {UIScript.highScore} ({UIScript.highName})");
+
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -38,6 +55,7 @@ public class MainManager : MonoBehaviour
         }
     }
 
+
     private void Update()
     {
         if (!m_Started)
@@ -49,8 +67,8 @@ public class MainManager : MonoBehaviour
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
-                Ball.transform.SetParent(null);
-                Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
+                ball.transform.SetParent(null);
+                ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
         else if (m_GameOver)
@@ -65,12 +83,26 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        scoreText.text = $"Score : {m_Points}";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
-        GameOverText.SetActive(true);
+        gameOverText.SetActive(true);
+
+        if (m_Points > highScore)
+        {
+            highScore = m_Points;
+            nameText.text = ($"Score: {highScore} ({UIScript.name})");
+            UIScript.StoreHighScore(highScore, UIScript.name);
+            UIScript.SaveHighScore();
+        }
+    }
+
+    public void Awake()
+    {
+        ball = GameObject.Find("Ball").GetComponent<Rigidbody>();
+        scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
     }
 }
